@@ -37,19 +37,19 @@ Github: https://github.com/PranitaChau/Hw_4.git
 sim_flips = do(100000)*nflip(n=2021, prob=0.024)
 
 ggplot(sim_flips) + 
-  geom_histogram(aes(x=nflip), binwidth = 1, fill = "lightblue", color = "blue") +
+  geom_histogram(aes(x=nflip), binwidth = 1, fill = "lightblue", color = "navy") +
   labs(title = "Simulated Distribution of Flagged trades", x = "Number of trades flagged", y = "Frequency simulated")
 
 
 # the p-value itself
-sum(sim_flips >= 70)/10000
+sum(sim_flips >= 70)/100000
 
 ```
 
 Null Hypothesis: The Iron Bank is not flagged more than the baseline rate.
 Test Statistic: The number of trades that are flagged belonging to Iron Bank (70).
 (Graph shown above)
-P-value: 0.018
+P-value: 0.002
 Conclusion: Since the p value is very low there is no evidence supporting the null hypothesis, and we reject the hypothesis that the number of flagged trades at Iron Bank is under the baseline trade flagging rate of 2.4%.
 
 
@@ -75,9 +75,9 @@ sum(health_flips >= 8)/100000
 
 
 Null Hypothesis: The local chain Gourmet Bites is not receiving higher than usual health code violations compared to the city wide average of 3%.
-Test Statistic: The number of health code violations reported from Gourmet Bites (50).
+Test Statistic: The number of health code violations reported from Gourmet Bites (8 out of 50).
 (Graph shown above)
-P-value: 2e-4
+P-value: 1e-4
 Conclusion: Since the p value is very low there is no evidence supporting the null hypothesis, and we reject the hypothesis that the Gourmet Bites is not receiving higher than usual health code violations than the citywide average of 3%.
 
 
@@ -132,14 +132,13 @@ p_value
 Ho = The difference in each group of jurors can be explained by chance.
 Test Statistic = We are using a chi-squared test where the expected counts is 240 multiplied by the proportion for that group (Group 1 = 30%, Group 2 = 25%, Group 3 = 20%, Group 4 = 15%, Group 5 = 10%). We then calculate the p value, which is 0.01462.
 P(T | Ho) = Since the p value is 0.01462, it is low enough to reject the null hypothesis that the difference in each group of jurors can be explained by chance.
-Conclusion = Based on the fact hat we rejected the null hypothesis, we can conclude that there is statistical significance to suggest systematic bias in jury selection for this specific judge. Other explanations that may exist to explain this discrepancy include that due to the specific kind of case the judge decided to have more or less of a specific group present or that this area may have a misrepresentation due to the demographics living there. Further investigations could be conducted by comparing this to other judges (other observed counts), increase the same size to more than 20 trials, or analyze patterns across a specific demographic area in order to determine if this discrepancy lies solely with this judge.
+Conclusion = Based on the fact we rejected the null hypothesis, we can conclude that there is statistical significance to suggest systematic bias in jury selection for this specific judge. Since our p value is 0.01462 we can conclude that getting a chi square of 12.426 or higher is very low, and we can therefore reject the null. Other explanations that may exist to explain this discrepancy include that due to the specific kind of case the judge decided to have more or less of a specific group present or that this area may have a misrepresentation due to the demographics living there. Further investigations could be conducted by comparing this to other judges (other observed counts), increase the same size to more than 20 trials, or analyze patterns across a specific demographic area in order to determine if this discrepancy lies solely with this judge.
 
 
 # Problem 4
-## Part A
 
 ```{r}
-
+#Part A
 
 # Count the occurrences of each letter in the sentence
 brown_table <- data.frame(Letter = LETTERS)
@@ -166,7 +165,6 @@ calculate_chi_squared = function(sentence, freq_table) {
 }
 
 
-calculate_chi_squared(brown_text, brown_table)
 
 
 #calc p val 
@@ -178,16 +176,17 @@ calc_p <- function(chi, dist){
 chi_dist <- sapply(brown_text, calculate_chi_squared, freq_table = frequency)
 null_dist <- (str_extract(chi_dist, "\\d+\\.\\d+$"))
 
+
+#null_dist is what we are using for part B
+
 ```
 
-
-
-## Part B
 
 
 
 ```{r}
 
+## Part B
 
 # Create sentence vector
 sentences <- c(
