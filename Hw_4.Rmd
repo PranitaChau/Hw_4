@@ -1,0 +1,227 @@
+---
+title: "Hw_4"
+author: "Pranita"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+
+
+library(tidyverse)
+library(mosaic)
+
+frequency <- read_csv("letter_frequencies.csv")
+brown_text <- readLines("brown_sentences.txt")
+
+```
+
+
+Name: Pranita Chaudhury
+
+UT EID: pc28377
+
+Github: https://github.com/PranitaChau/Hw_4.git
+
+
+
+# Problem 1
+
+```{r}
+
+sim_flips = do(100000)*nflip(n=2021, prob=0.024)
+
+ggplot(sim_flips) + 
+  geom_histogram(aes(x=nflip), binwidth = 1, fill = "lightblue", color = "blue") +
+  labs(title = "Simulated Distribution of Flagged trades", x = "Number of trades flagged", y = "Frequency simulated")
+
+
+# the p-value itself
+sum(sim_flips >= 70)/10000
+
+```
+
+Null Hypothesis: The Iron Bank is not flagged more than the baseline rate.
+Test Statistic: The number of trades that are flagged belonging to Iron Bank (70).
+(Graph shown above)
+P-value: 0.018
+Conclusion: Since the p value is very low there is no evidence supporting the null hypothesis, and we reject the hypothesis that the number of flagged trades at Iron Bank is under the baseline trade flagging rate of 2.4%.
+
+
+
+# Problem 2
+
+
+```{r}
+
+health_flips = do(100000)*nflip(n=50, prob=0.03)
+
+ggplot(health_flips) + 
+  geom_histogram(aes(x=nflip), binwidth = 1, fill = "pink", color = "red") +
+  labs(title = "Distribution of Health code violations", x = "Number of violations", y = "Frequency simulated")
+
+
+# the p-value itself
+sum(health_flips >= 8)/100000
+
+
+
+```
+
+
+Null Hypothesis: The local chain Gourmet Bites is not receiving higher than usual health code violations compared to the city wide average of 3%.
+Test Statistic: The number of health code violations reported from Gourmet Bites (50).
+(Graph shown above)
+P-value: 2e-4
+Conclusion: Since the p value is very low there is no evidence supporting the null hypothesis, and we reject the hypothesis that the Gourmet Bites is not receiving higher than usual health code violations than the citywide average of 3%.
+
+
+
+# Problem 3
+
+
+```{r}
+
+expected_distribution = c(g1 = 0.30, g2 = 0.25, g3 = 0.20, g4 = 0.15, g5 = 0.10)
+observed_counts =  c(g1 = 85, g2 = 56, g3 = 59, g4 = 27, g5 = 13)
+
+expected_counts <- expected_distribution *240
+
+
+num_jurors = 240
+simulated_counts = rmultinom(1, num_jurors, expected_distribution)
+
+
+chi_squared_statistic = function(observed, expected) {
+  sum((observed - expected)^2 / expected)
+}
+
+
+# Chi-squared statistic for the observed data
+observed_chi2 <- chi_squared_statistic(observed_counts, expected_counts)
+observed_chi2
+
+
+
+num_simulations = 100000
+chi2_sim = do(num_simulations)*{
+  simulated_counts = rmultinom(1, num_jurors, expected_distribution)
+  this_chi2 = chi_squared_statistic(simulated_counts, num_jurors*expected_distribution)
+  c(chi2 = this_chi2) 
+}
+
+
+
+ggplot(data.frame(chi2 = chi2_sim), aes(x = chi2)) +
+  geom_histogram(binwidth = 0.5, fill = "pink", color = "red") +
+  labs(title = "Distribution of Chi-squared Statistics", x = "Chi-squared Statistic", y = "Frequency")
+
+# p value
+p_value <- mean(chi2_sim >= observed_chi2)
+p_value
+
+
+```
+
+
+Ho = The difference in each group of jurors can be explained by chance.
+Test Statistic = We are using a chi-squared test where the expected counts is 240 multiplied by the proportion for that group (Group 1 = 30%, Group 2 = 25%, Group 3 = 20%, Group 4 = 15%, Group 5 = 10%). We then calculate the p value, which is 0.01462.
+P(T | Ho) = Since the p value is 0.01462, it is low enough to reject the null hypothesis that the difference in each group of jurors can be explained by chance.
+Conclusion = Based on the fact hat we rejected the null hypothesis, we can conclude that there is statistical significance to suggest systematic bias in jury selection for this specific judge. Other explanations that may exist to explain this discrepancy include that due to the specific kind of case the judge decided to have more or less of a specific group present or that this area may have a misrepresentation due to the demographics living there. Further investigations could be conducted by comparing this to other judges (other observed counts), increase the same size to more than 20 trials, or analyze patterns across a specific demographic area in order to determine if this discrepancy lies solely with this judge.
+
+
+# Problem 4
+## Part A
+
+```{r}
+
+
+# Count the occurrences of each letter in the sentence
+brown_table <- data.frame(Letter = LETTERS)
+
+
+# chi sqr func
+calculate_chi_squared = function(sentence, freq_table) {
+
+  # cleaning
+  clean_sentence = gsub("[^A-Za-z]", "", sentence)
+  clean_sentence = toupper(clean_sentence)
+  
+  # count observed counts
+  observed_counts = table(factor(strsplit(clean_sentence, "")[[1]], levels = freq_table$Letter))
+  
+  # Calculate expected counts
+  total_letters = sum(observed_counts)
+  expected_counts = total_letters * frequency$Probability
+  
+  # Chi-squared statistic
+  chi_squared_stat = sum((observed_counts - expected_counts)^2 / expected_counts)
+  
+  return(chi_squared_stat)
+}
+
+
+calculate_chi_squared(brown_text, brown_table)
+
+
+#calc p val 
+calc_p <- function(chi, dist){
+  mean(dist >= chi)
+}
+
+
+chi_dist <- sapply(brown_text, calculate_chi_squared, freq_table = frequency)
+null_dist <- (str_extract(chi_dist, "\\d+\\.\\d+$"))
+
+```
+
+
+
+## Part B
+
+
+
+```{r}
+
+
+# Create sentence vector
+sentences <- c(
+  "She opened the book and started to read the first chapter, eagerly anticipating what might come next.",
+  "Despite the heavy rain, they decided to go for a long walk in the park, crossing the main avenue by the fountain in the center.",
+  "The museum’s new exhibit features ancient artifacts from various civilizations around the world.",
+  "He carefully examined the document, looking for any clues that might help solve the mystery.",
+  "The students gathered in the auditorium to listen to the guest speaker’s inspiring lecture.",
+  "Feeling vexed after an arduous and zany day at work, she hoped for a peaceful and quiet evening at home, cozying up after a quick dinner with some TV, or maybe a book on her upcoming visit to Auckland.",
+  "The chef demonstrated how to prepare a delicious meal using only locally sourced ingredients, focusing mainly on some excellent dinner recipes from Spain.",
+  "They watched the sunset from the hilltop, marveling at the beautiful array of colors in the sky.",
+  "The committee reviewed the proposal and provided many points of useful feedback to improve the project’s effectiveness.",
+  "Despite the challenges faced during the project, the team worked tirelessly to ensure its successful completion, resulting in a product that exceeded everyone’s expectations.")
+
+
+#expected counts = null distribution
+
+sent_chi <- sapply(sentences, calculate_chi_squared, freq_table = frequency)
+
+#calc p value 
+sent_p <- sapply(sent_chi, function(x) calc_p(x, null_dist))
+
+#p val table
+p_values_table <- tibble(Sentence = sentences, P_Value = round(sent_p, 3))
+p_values_table |>
+  select(P_Value)
+
+
+
+
+```
+
+The table shows all the p values in the order the sentences were inputted. Based on the p values given sentence 6 had the lowest p value and was low enough to reject the null hypothesis, therefore we can conclude that sentence 6 was written by an LLM. Sentence 6 was "Feeling vexed after an arduous and zany day at work, she hoped for a peaceful and quiet evening at home, cozying up after a quick dinner with some TV, or maybe a book on her upcoming visit to Auckland."
+
+
+
+
